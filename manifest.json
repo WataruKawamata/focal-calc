@@ -1,0 +1,22 @@
+{
+  "name": "焦点距離計算機",
+  "short_name": "焦点距離",
+  "description": "カメラ〜被写体の距離と被写体サイズから必要な焦点距離を計算します",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

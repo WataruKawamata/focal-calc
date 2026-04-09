@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Focal Length">
+  <meta name="theme-color" content="#ffffff">
+  <title>Focal Length Calculator</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f5f5f5; --surface: #ffffff; --surface2: #f0f0f0;
+      --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+      --text: #111111; --text2: #555555; --text3: #888888;
+      --ok: #1a7f4b; --ok-bg: #e8f7ef;
+      --warn: #7a5200; --warn-bg: #fff4d6;
+      --ng: #b91c1c; --ng-bg: #fef2f2;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0e0e0e; --surface: #1c1c1e; --surface2: #2c2c2e;
+        --border: rgba(255,255,255,0.10); --border2: rgba(255,255,255,0.20);
+        --text: #f0f0f0; --text2: #aaaaaa; --text3: #666666;
+        --ok: #4ade80; --ok-bg: #052e16;
+        --warn: #fbbf24; --warn-bg: #1c1500;
+        --ng: #f87171; --ng-bg: #1f0a0a;
+      }
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100dvh;
+      padding: env(safe-area-inset-top,16px) 0 calc(env(safe-area-inset-bottom,0px) + 32px);
+    }
+    header { padding: 20px 20px 12px; }
+    header h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.3px; }
+    header p { font-size: 13px; color: var(--text3); margin-top: 3px; }
+    .container { padding: 0 16px; display: flex; flex-direction: column; gap: 12px; max-width: 540px; margin: 0 auto; }
+    .card { background: var(--surface); border-radius: 14px; border: 0.5px solid var(--border); padding: 14px 16px; }
+    .card label, .card .label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 8px; font-weight: 500; }
+    .input-row { display: flex; align-items: center; gap: 8px; }
+    .input-row input {
+      flex: 1; font-size: 20px; font-weight: 500; color: var(--text);
+      background: var(--surface2); border: 0.5px solid var(--border2);
+      border-radius: 10px; padding: 10px 12px; width: 100%; -webkit-appearance: none;
+    }
+    .input-row input:focus { outline: none; border-color: var(--text); }
+    .input-row .unit { font-size: 14px; color: var(--text2); min-width: 16px; }
+    select {
+      width: 100%; font-size: 15px; color: var(--text);
+      background: var(--surface2); border: 0.5px solid var(--border2);
+      border-radius: 10px; padding: 10px 12px; -webkit-appearance: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+    }
+    select:focus { outline: none; }
+    .subj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .sublabel { font-size: 12px; color: var(--text3); margin-bottom: 5px; }
+    .hint { font-size: 11px; color: var(--text3); margin-top: 7px; line-height: 1.5; }
+    .result-card { background: var(--surface); border-radius: 14px; border: 0.5px solid var(--border); padding: 20px 16px; text-align: center; }
+    .result-label { font-size: 12px; color: var(--text2); font-weight: 500; margin-bottom: 4px; }
+    .result-value { font-size: 56px; font-weight: 600; line-height: 1; letter-spacing: -2px; color: var(--text); }
+    .result-unit { font-size: 13px; color: var(--text2); margin-top: 4px; }
+    .result-ff { font-size: 13px; color: var(--text3); margin-top: 3px; }
+    .breakdown { font-size: 12px; color: var(--text3); text-align: center; line-height: 1.8; padding: 0 4px; }
+    .breakdown strong { color: var(--text2); font-weight: 500; }
+    .suggestion { font-size: 13px; color: var(--text2); text-align: center; line-height: 1.6; }
+    .section-title {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.6px;
+      text-transform: uppercase; color: var(--text3); padding: 4px 0 2px;
+    }
+    .equip-card { background: var(--surface); border-radius: 14px; border: 0.5px solid var(--border); overflow: hidden; }
+    .equip-row { display: flex; align-items: center; padding: 11px 14px; border-bottom: 0.5px solid var(--border); gap: 10px; }
+    .equip-row:last-child { border-bottom: none; }
+    .equip-name { flex: 1; font-size: 14px; color: var(--text); line-height: 1.3; }
+    .equip-range { font-size: 11px; color: var(--text3); margin-top: 2px; }
+    .badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+    .badge-ok   { background: var(--ok-bg);   color: var(--ok); }
+    .badge-warn { background: var(--warn-bg); color: var(--warn); }
+    .badge-ng   { background: var(--ng-bg);   color: var(--ng); }
+    .note { font-size: 11px; color: var(--text3); line-height: 1.6; text-align: center; padding: 0 8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Focal Length Calculator</h1>
+    <p>Find the lens you need for any shot</p>
+  </header>
+  <div class="container">
+
+    <div class="card">
+      <label for="sensor">Image sensor</label>
+      <select id="sensor">
+        <option value="36,24">35mm Full Frame (36×24mm)</option>
+        <option value="27.9,18.6">APS-H (27.9×18.6mm)</option>
+        <option value="22.3,14.9">APS-C Canon (22.3×14.9mm)</option>
+        <option value="23.6,15.8">APS-C Nikon / Sony (23.6×15.8mm)</option>
+        <option value="17.3,13">Micro Four Thirds (17.3×13mm)</option>
+        <option value="13.2,8.8">1" (13.2×8.8mm)</option>
+        <option value="8.8,6.6">2/3" (8.8×6.6mm)</option>
+        <option value="6.4,4.8">1/2" (6.4×4.8mm)</option>
+        <option value="4.8,3.6">1/3" (4.8×3.6mm)</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <label for="distance">Camera-to-subject distance</label>
+      <div class="input-row">
+        <input type="number" id="distance" min="0.1" step="0.1" value="20" inputmode="decimal">
+        <span class="unit">m</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label">Subject size</div>
+      <div class="subj-grid">
+        <div>
+          <div class="sublabel">Height</div>
+          <div class="input-row">
+            <input type="number" id="subj-v" min="0" step="0.1" value="1" inputmode="decimal">
+            <span class="unit">m</span>
+          </div>
+        </div>
+        <div>
+          <div class="sublabel">Width (optional)</div>
+          <div class="input-row">
+            <input type="number" id="subj-h" min="0" step="0.1" placeholder="—" inputmode="decimal">
+            <span class="unit">m</span>
+          </div>
+        </div>
+      </div>
+      <p class="hint">If width is entered, both axes are calculated and the longer result is used.</p>
+    </div>
+
+    <div class="result-card">
+      <div class="result-label">Required focal length</div>
+      <div class="result-value" id="focal-result">480</div>
+      <div class="result-unit">mm</div>
+      <div class="result-ff" id="ff-note">Full-frame equivalent</div>
+    </div>
+
+    <div class="breakdown" id="breakdown"></div>
+    <div class="suggestion" id="suggestion"></div>
+
+    <div class="section-title">Camera compatibility</div>
+    <div class="equip-card" id="camera-list"></div>
+
+    <div class="section-title">B4 lens compatibility (mounted on 2/3" sensor)</div>
+    <div class="equip-card" id="lens-list"></div>
+
+    <div class="note">
+      Height → sensor short side · Width → sensor long side<br>
+      B4 lens FF equiv = actual focal length × 2.67 (2/3" crop factor)<br>
+      Extender = reachable using built-in 2× extender / digital teleconverter
+    </div>
+
+  </div>
+
+  <script>
+    const CAMERAS = [
+      { name: "Sony PXW-Z90 / HXR-NX80",   wide: 29,   tele: 348,  dtele: 696,  note: "Clear Image Zoom ×2 (HD)" },
+      { name: "Sony HXR-NX5R",              wide: 28.8, tele: 576,  dtele: 1152, note: "Clear Image Zoom ×2 (HD)" },
+      { name: "Sony PXW-Z280",              wide: 30.3, tele: 515,  dtele: 1030, note: "Digital extender ×2 (HD)" },
+      { name: "Sony PXW-Z190",              wide: 28.8, tele: 720,  dtele: 1440, note: "Digital extender ×2 (HD)" },
+      { name: "Sony PXW-Z200 / HXR-NX800",  wide: 24,   tele: 480,  dtele: 960,  note: "Clear Image Zoom ×2 (HD)" },
+      { name: "Sony PXW-X200 / PXW-X180",   wide: 29.3, tele: 499,  dtele: 998,  note: "Digital extender ×2 (HD)" },
+      { name: "Sony PXW-Z300",              wide: 28.8, tele: 576,  dtele: 1152, note: "Digital extender ×2 (HD)" },
+    ];
+
+    const CROP = 2.67;
+    const LENSES = [
+      { name: "Fujinon UA13x4.5 (4K UHD)", aw: 4.5,  at: 59,  ext: true  },
+      { name: "Fujinon UA14x4.5 (4K UHD)", aw: 4.5,  at: 63,  ext: true  },
+      { name: "Fujinon UA18x5.5 (4K UHD)", aw: 5.5,  at: 100, ext: true  },
+      { name: "Fujinon UA18x7.6 (4K UHD)", aw: 7.6,  at: 137, ext: true  },
+      { name: "Fujinon UA22x8 (4K UHD)",   aw: 8.0,  at: 176, ext: true  },
+      { name: "Fujinon UA24x7.8 (4K UHD)", aw: 7.8,  at: 187, ext: true  },
+      { name: "Fujinon UA46x9.5 (4K UHD)", aw: 9.5,  at: 437, ext: true  },
+      { name: "Fujinon HA14x4.5 (HD)",     aw: 4.5,  at: 63,  ext: true  },
+      { name: "Fujinon HA23x7.6 (HD)",     aw: 7.6,  at: 175, ext: true  },
+      { name: "Fujinon HA42x9.7 (HD)",     aw: 9.7,  at: 410, ext: true  },
+      { name: "Fujinon ZA12x4.5 (HD)",     aw: 4.5,  at: 54,  ext: true  },
+      { name: "Fujinon ZA17x7.6 (HD)",     aw: 7.6,  at: 130, ext: true  },
+      { name: "Fujinon ZA22x7.6 (HD)",     aw: 7.6,  at: 167, ext: true  },
+      { name: "Canon HJ11x4.7 (HD)",       aw: 4.7,  at: 52,  ext: false },
+      { name: "Canon HJ18x7.6 (HD)",       aw: 7.6,  at: 137, ext: false },
+      { name: "Canon HJ21x7.5 (HD)",       aw: 7.5,  at: 158, ext: true  },
+      { name: "Canon HJ40x14 (HD)",        aw: 14.0, at: 560, ext: true  },
+      { name: "Canon KJ10x4.5 (HD)",       aw: 4.5,  at: 45,  ext: false },
+      { name: "Canon KJ13x6 (HD)",         aw: 6.0,  at: 78,  ext: false },
+      { name: "Canon KJ17x7.7 (HD)",       aw: 7.7,  at: 131, ext: false },
+      { name: "Canon KJ20x8.2 (HD)",       aw: 8.2,  at: 164, ext: true  },
+      { name: "Canon KJ22x7.6 (HD)",       aw: 7.6,  at: 167, ext: false },
+    ];
+
+    const COMMON = [14,16,18,20,24,28,35,50,70,85,100,105,135,200,300,400,500,600];
+    function nearest(v) { return COMMON.reduce((a,b) => Math.abs(b-v)<Math.abs(a-v)?b:a); }
+
+    function makeRow(name, rangeText, extNote, badgeClass, badgeText) {
+      const row = document.createElement('div');
+      row.className = 'equip-row';
+      row.innerHTML = `
+        <div class="equip-name">
+          ${name}
+          <div class="equip-range">${rangeText}</div>
+          ${extNote ? `<div class="equip-range" style="color:var(--warn)">${extNote}</div>` : ''}
+        </div>
+        <span class="badge ${badgeClass}">${badgeText}</span>`;
+      return row;
+    }
+
+    function calc() {
+      const sv = document.getElementById('sensor').value.split(',');
+      const sW = parseFloat(sv[0]), sH = parseFloat(sv[1]);
+      const dist = parseFloat(document.getElementById('distance').value);
+      const vv = parseFloat(document.getElementById('subj-v').value);
+      const vh = parseFloat(document.getElementById('subj-h').value);
+      const hasV = !isNaN(vv) && vv > 0;
+      const hasH = !isNaN(vh) && vh > 0;
+
+      if (!dist || dist <= 0 || (!hasV && !hasH)) {
+        ['focal-result','ff-note','breakdown','suggestion'].forEach(id => {
+          document.getElementById(id).textContent = id === 'focal-result' ? '—' : '';
+        });
+        document.getElementById('ff-note').textContent = '';
+        document.getElementById('camera-list').innerHTML = '';
+        document.getElementById('lens-list').innerHTML = '';
+        return;
+      }
+
+      const dMm = dist * 1000;
+      let fV = null, fH = null;
+      const lines = [];
+      if (hasV) { fV = dMm * sH / (vv * 1000); lines.push(`Height: ${dist}m × ${sH}mm ÷ ${vv}m = ${Math.round(fV)}mm`); }
+      if (hasH) { fH = dMm * sW / (vh * 1000); lines.push(`Width: ${dist}m × ${sW}mm ÷ ${vh}m = ${Math.round(fH)}mm`); }
+
+      const cands = [fV, fH].filter(x => x !== null);
+      const adopted = Math.max(...cands);
+      const rounded = Math.round(adopted);
+
+      document.getElementById('focal-result').textContent = rounded;
+
+      const isFF = sW === 36 && sH === 24;
+      document.getElementById('ff-note').textContent = isFF
+        ? 'Full-frame equivalent'
+        : `FF equiv: approx. ${Math.round(adopted * 36 / sW)}mm`;
+
+      document.getElementById('breakdown').innerHTML =
+        lines.join('<br>') + (cands.length > 1 ? '<br><strong>→ Longer result used</strong>' : '');
+
+      const nr = nearest(rounded);
+      const diff = Math.round((nr - adopted) / adopted * 100);
+      const sign = diff >= 0 ? '+' : '';
+      document.getElementById('suggestion').textContent =
+        adopted < 14 ? 'Ultra-wide lens required (under 14mm)' :
+        adopted > 600 ? 'Super-telephoto required. Tripod/gimbal essential.' :
+        `Closest common lens → ${nr}mm (${nr > adopted ? 'slightly tighter' : 'slightly wider'}, ${sign}${diff}%)`;
+
+      // FF equiv required for comparison
+      const reqFF = isFF ? adopted : adopted * 36 / sW;
+
+      // Cameras
+      const camEl = document.getElementById('camera-list');
+      camEl.innerHTML = '';
+      CAMERAS.forEach(c => {
+        const ok   = reqFF <= c.tele;
+        const warn = !ok && c.dtele > 0 && reqFF <= c.dtele;
+        const range = `${c.wide}–${c.tele}mm FF equiv${c.dtele ? ` / ${c.dtele}mm w/ extender` : ''}`;
+        camEl.appendChild(makeRow(
+          c.name, range,
+          warn ? c.note : '',
+          ok ? 'badge-ok' : warn ? 'badge-warn' : 'badge-ng',
+          ok ? 'OK' : warn ? 'Extender' : 'NG'
+        ));
+      });
+
+      // B4 Lenses
+      const lensEl = document.getElementById('lens-list');
+      lensEl.innerHTML = '';
+      LENSES.forEach(l => {
+        const tFF  = Math.round(l.at * CROP);
+        const tFFe = l.ext ? Math.round(l.at * 2 * CROP) : 0;
+        const wFF  = Math.round(l.aw * CROP);
+        const ok   = reqFF <= tFF;
+        const warn = !ok && l.ext && reqFF <= tFFe;
+        const ext  = l.ext ? ` / ${tFFe}mm w/ 2× extender` : '';
+        lensEl.appendChild(makeRow(
+          l.name, `${wFF}–${tFF}mm FF equiv${ext}`,
+          warn ? 'Reachable with 2× extender' : '',
+          ok ? 'badge-ok' : warn ? 'badge-warn' : 'badge-ng',
+          ok ? 'OK' : warn ? 'Extender' : 'NG'
+        ));
+      });
+    }
+
+    ['sensor','distance','subj-v','subj-h'].forEach(id =>
+      document.getElementById(id).addEventListener(id === 'sensor' ? 'change' : 'input', calc)
+    );
+    calc();
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+  </script>
+</body>
+</html>
