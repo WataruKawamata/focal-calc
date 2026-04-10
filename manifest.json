@@ -1,6 +1,6 @@
 {
   "name": "焦点距離計算機",
-  "short_name": "焦点距離",
+  "short_name": "FCalc",
   "description": "カメラ〜被写体の距離と被写体サイズから必要な焦点距離を計算します",
   "start_url": "./index.html",
   "display": "standalone",
